@@ -28,8 +28,8 @@ router.get('/users', authenticate, requireRole('ADMIN'), getAllUsers);
 // Product routes
 router.post('/products', authenticate, requireRole('ADMIN'), createProduct);
 router.get('/products', authenticate, getAllProducts);
-router.put('/products/:id', authenticate, updateProduct);
-router.delete('/products/:id', authenticate, deleteProduct);
+router.put('/products/:id', authenticate, requireRole('ADMIN'), updateProduct);
+router.delete('/products/:id', authenticate, requireRole('ADMIN'), deleteProduct);
 
 // Order routes
 router.post('/orders', authenticate, createOrder);

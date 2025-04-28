@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '../../generated/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { logger } from '../lib/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
 
@@ -30,11 +31,13 @@ export const signupUser = async (req: Request, res: Response): Promise<void> => 
         }
         const hashed = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({ data: { email, password: hashed, name } });
+        logger.info('User created successfully', { userId: user.id });
         res.json({ id: user.id, email: user.email });
     } catch (error: any) {
         if (error.code === 'P2002') {
             res.status(400).json({ error: 'Email already exists' });
         } else {
+            logger.error('Failed to create user', { error: error.message });
             res.status(500).json({ error: 'Failed to create user', details: error.message });
         }
     }
@@ -57,8 +60,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         }
 
         const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+
+        logger.info('User logged in successfully', { userId: user.id });
         res.json({ token });
     } catch (error: any) {
+        logger.error('Failed to login user', { error: error.message });
         res.status(500).json({ error: 'Failed to login', details: error.message });
     }
 };
@@ -67,8 +73,11 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
     try {
         const users = await prisma.user.findMany();
+
+        logger.info('Fetched all users', { count: users.length });
         res.json(users);
     } catch (error: any) {
+        logger.error('Failed to fetch users', { error: error.message });
         res.status(500).json({ error: 'Failed to fetch users', details: error.message });
     }
 };
