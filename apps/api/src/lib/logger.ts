@@ -12,8 +12,4 @@ const logger = winston.createLogger({
   ]
 });
 
-// Example usage
-logger.info('Server started successfully!');
-logger.error('Failed to process payment', { error: 'Payment gateway error' });
-
 export { logger };

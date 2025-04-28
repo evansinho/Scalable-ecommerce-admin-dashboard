@@ -14,9 +14,10 @@ services:
       - DB_PORT=5432
       - DB_USER=postgres
       - DB_NAME=mydb
+      - REDIS_URL=redis://redis:6379
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+      - redis  # Ensure redis starts before API
     restart: unless-stopped
     networks:
       - app-network
@@ -50,6 +51,36 @@ services:
         limits:
           memory: 512M
           cpus: '0.5'
+
+  redis:
+    image: redis:7-alpine  # Redis service
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - app-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+    depends_on:
+      - prometheus
 
 volumes:
   postgres_data:
